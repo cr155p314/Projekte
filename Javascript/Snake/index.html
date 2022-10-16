@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake</title>
+</head>
+
+<body>
+    
+    <canvas id="canvas" width="480" height="480"></canvas>                                      <!--- "generiere eine Fläche mit den maßen width und height und nenne diese "canvas" --> 
+
+    
+    <script>                                                                                    //hier beginnt JavaScript 
+        let canvas = document.getElementById("canvas")                                          //greife aus unserem Dokument auf die id canvas zu (damit greifen wir aus JS auf unser Element zu)
+        let ctx = canvas.getContext("2d");                                                      //Wir wollen in 2D auf unserem Canvas zeichen -> Context (ctx)
+        let rows = 20;                                                                          //wir wollen das Canvas in 20 Reihen aufteilen
+        let cols = 20;                                                                          // wir wollen das Canvas in 20 Zeilen aufteilen
+        let snake = [{                                                                          //Position der Schlange auf X- und Y-Achse 
+            x: 19, 
+            y: 3
+        }];
+
+        let food;
+        
+        let cellWidth = canvas.width / cols;                                                    //definiert die Zeilengröße -> Canvas Breite geteilt durch Anzahl Zeilen
+        let cellHeight = canvas.height / rows;                                                  //definiert die Reihengröße -> Canvas Höhe geteilt durch Anzahl Reihen                                                     
+        let direction = "LEFT";
+        let foodCollected = false;                        
+
+        placeFood();
+
+
+        setInterval(gameLoop, 200);                                                             //Aktualisiere das spiel alle 200ms (25 mal pro sek)
+        document.addEventListener("keydown", keyDown);                                          //Immer wenn das Event Tastendruck ausgelöst wird, wende die Funktion "keyDown" aus
+
+
+        draw();
+    
+
+        function draw() {                                                                       //Fuktion Draw = Male in das Dokument
+            ctx.fillStyle = "black";                                                            //Kontext Füllstil = Schwarz            
+            ctx.fillRect(0, 0, canvas.width, canvas.height);                                    //Kontext dass von x nach y gefüllt werden soll
+            ctx.fillStyle = "white";                                                            //das soeben erstellt fillRect soll mit Weiß gefüllt werden
+           
+            snake.forEach(part => add(part.x, part.y));                                         //for-schleife -> FÜR JEDEN Part (X oder Y) adde einen part 
+                                                                                                // Zuerst in X, anschließend Y
+
+            ctx.fillStyle ="yellow"; 
+            add(food.x, food.y);                                                                //Foodzugriff auf X bzw. Y Koordinate
+
+            requestAnimationFrame(draw);                                                        //aktualisiere nach jedem Zug(draw) das Canvas neu
+        }
+
+        function testGameOver() {
+
+            let firstPart = snake[0];
+            let otherParts = snake.slice(1);
+            let duplicatePart = otherParts.find(part => part.x == firstPart.x && part.y == firstPart.y);
+
+            // 1. Schlange läuft gegen die Wand
+            if (snake[0].x < 0 ||
+            snake[0].x > cols - 1 ||
+            snake[0].y < 0 ||
+            snake[0].y > rows - 1 ||
+            duplicatePart
+        ) {
+            placeFood();
+            snake = [{
+                x: 19,
+                 y: 3
+            }];
+            direction = 'LEFT';
+        }
+
+    }
+
+        function placeFood() {
+            let randomX = Math.floor(Math.random() * cols);
+            let randomY = Math.floor(Math.random() * rows);
+
+            food = {
+                x: randomX,
+                y: randomY
+            };
+        }
+
+
+
+        function add(x, y) {                                //
+            ctx.fillRect(x * cellWidth, y * cellHeight, cellWidth - 1, cellHeight - 1);           //wir schaffen hiermit das Raster x*Zellhöhe + y*zeilenhöhe
+                                                                                                  //verschiebt das randomisierte "Essen" auf der cellhöhe oder breite - 1 
+        }
+        
+
+       
+        function shiftSnake() {
+            for (let i = snake.length - 1; i > 0; i--) {
+                const part = snake[i];
+                const lastPart = snake[i - 1];
+                part.x = lastPart.x;
+                part.y = lastPart.y;
+            }
+        }
+
+        function gameLoop() {
+            testGameOver();
+            if (foodCollected) {
+                snake = [{
+                    x: snake[0].x,
+                    y: snake[0].y
+                }, ...snake];
+
+                foodCollected = false;
+            }
+            
+            shiftSnake();
+
+            if(direction =="LEFT") {                                                            //wenn die Richtung "LEFT" ist, bewege snake von Position 0 auf der X-Achse nach Links
+                snake[0].x--;
+            }
+            if(direction =="RIGHT") {                                                           //wenn die Richtung "RIGHT" ist, bewege snake von Position 0 auf der X-Achse nach Rechts
+                snake[0].x++;
+            }
+            if(direction =="UP") {                                                              //wenn die Richtung "UP" ist, bewege snake von Position 0 auf der Y-Achse nach Oben
+                snake[0].y--;
+            }
+            if(direction =="DOWN") {                                                            //wenn die Richtung "DOWN" ist, bewege snake von Position 0 auf der Y-Achse nach Unten
+                snake[0].y++;
+            }
+
+            if (snake[0].x == food.x &&                                                         //ist snake auf position null achse x gleich food position null achse x ODER/ UND 
+                snake[0].y == food.y) {                                                         //ist snake auf position null achse y gleich food position null achse y
+                foodCollected = true;                                                           //wird innerhalb der klammer auf True geändert = Wenn schlange die selbe Pos wie futter hat -> eingesammelt
+
+                placeFood();                                                                //damit wird das Futter jedes mal neu platziert, wenn es eingesammelt wird (-> Function placeFood)
+            }
+
+        }         
+
+        function keyDown(e) {                                                                   // Weißt den Pfeiltasten die Richtung zu
+            if (e.keyCode == 37) {                                                              //wird die Taste 37 gedrückt -> Direction "X"
+                direction = "LEFT";
+            }
+            if (e.keyCode == 38) {                                                              //wird die Taste 38 gedrückt -> Direction "X
+                direction = "UP";
+            }
+            if (e.keyCode == 39) {                                                              //wird die Taste 39 gedrückt -> Direction "X
+                direction = "RIGHT";
+            }
+            if (e.keyCode == 40) {                                                              //wird die Taste 40 gedrückt -> Direction "X
+                direction = "DOWN";
+            }
+        }
+    
+        </script>
+</body>
+
+</html>
