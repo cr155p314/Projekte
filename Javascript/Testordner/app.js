@@ -1,4 +1,3 @@
-<script>
 function myFunction() {
   let person = prompt("Please enter your name", "Harry Potter");
   if (person != null) {
